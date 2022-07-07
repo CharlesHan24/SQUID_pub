@@ -1,0 +1,7 @@
+
+g++  -c  -mavx2  -std=c++11 -march=haswell xxhash.c
+g++  -c  -mavx2  -std=c++11 -march=haswell Cuckoo.cpp
+g++ -mavx2  -std=c++11 -march=haswell xxhash.o Cuckoo.o  main.cpp -o main
+ulimit -s unlimited
+
+ 
