@@ -12,6 +12,6 @@ This code implements the varaints of squid algorithm presented in the paper. The
     
     
 # building the graphs:
-After running the tests, to build the graphs go to "figures_scripts" and the run the graph scripts.
+After running the tests, to build the graphs go to "figures_scripts" and the run the graph scripts, the figures will be created inn the folder "figures"
  
  
