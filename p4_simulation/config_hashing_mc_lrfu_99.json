@@ -1,0 +1,20 @@
+{
+    "rows": 65536,
+    "columns": 4,
+    "fullness": 0.7,
+    "emptyness": 0.3,
+    "delta": 0.1,
+    "time_interv": 200.0,
+    "sample_z": 1000,
+    "delay_recirc": 16,
+    "bw_dp": 0.5,
+    "delay_cpdp": 10000,
+    "bw_cp": 1000,
+    "cp_outbound_rate": 1000,
+    "delay_backend": 50000,
+    "log_fname": "log_hashing_mc_lrfu_99",
+    "control_plane_mode": "monte_carlo",
+    "data_plane_mode": "best_effort_lrfu_accurate",
+    "dataset": "data2.dat",
+    "data_amount": 25000000
+}
