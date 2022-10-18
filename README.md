@@ -15,3 +15,10 @@ This code implements the varaints of squid algorithm presented in the paper. The
 After running the tests, to build the graphs go to "figures_scripts" and the run the graph scripts, the figures will be created inn the folder "figures"
  
  
+## P4 implementation of SQUID
+
+The `p4src` directory contains the P4 source code of SQUID, and can be compiled into Tofino switches. The `squid_lrfu_4.p4` and `squid_lrfu_4_small.p4` can be compiled to Tofino, while `squid_lrfu_8.p4` and `squid_lrfu_12.p4` can be compiled to Tofino2.
+
+The `p4_simulation` directory is the simulated implementation of the P4 SQUID for evaluating the performance of P4 SQUID, which mimics the behaviors of the network (transmission delay) and the P4 program installed in Tofino switches. 
+- To run the simulation, first generate the Zip-f dataset: `python3 data_gen.py`.
+- We have provided configuration profiles in json as well as scripts for automating the simulations. To run the original LRFU, simply execute `bash run_lrfu.sh`. To run the CPU SQUID-LRFU, execute `bash run_squid_lrfu.sh`. To run the simulated P4 SQUID-LRFU, execute `bash run_squid_lrfu_approx.sh`.
