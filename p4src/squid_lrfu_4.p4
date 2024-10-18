@@ -46,7 +46,7 @@ const ctrl_proto_t CTRL_OUTBOUND = 1;
 const ctrl_proto_t CTRL_ADJUST = 2;
 const ctrl_proto_t CTRL_REINSERT_SAMPLE = 3;
 
-#define ARRAY_LEN 65536 // 0.256M items
+#define ARRAY_LEN 32768 // 0.256M items
 #define COLUMN_CNT 4 // upscaled to power of 2
 #define ARRAY_BITWIDTH 16
 #define COLUMN_BITWIDTH 2
@@ -698,6 +698,7 @@ control SwitchEgress(
         }
     };
 
+    // ARRAY_LEN * 2 compiles in bf 9.9.1 but not in bf 9.11
     #define VALUE_CACHE_DEF(id) \
     Register<bit<32>, bit<32> >(ARRAY_LEN * 2) value_cache## id ##; \
     RegisterAction<bit<32>, bit<32>, void> (value_cache## id ##) value_cache## id ##_insert_action = { \

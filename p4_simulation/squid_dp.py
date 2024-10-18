@@ -28,7 +28,7 @@ class Squid_DP(object):
             for j in range(self.rows):
                 self.array[i].append([0, 0, 1])
 
-        self.bitmap = [0 for i in range(self.columns * self.rows // 64)]
+        self.bitmap = [0 for i in range(self.columns * self.rows // 64 + 1)]
         self.bitmap_len = len(self.bitmap)
 
         self.threshold = 1
@@ -98,6 +98,13 @@ class Squid_DP(object):
         self.sample_counter = 0
         self.save_log()
 
+        cur_res = 0
+        for i in range(self.columns):
+            for j in range(self.rows):
+                if self.array[i][j][1] >= self.threshold:
+                    cur_res += 1
+        self.pkt_counter_remain = self.fullness - cur_res
+
     def save_log(self):
         self.log.write("Phase: {}. Counter = {}. Hit = {}. Threshold = {}. Total_pkt = {}. ".format(self.phase, self.sta_counter, self.sta_hit, self.threshold, self.sta_total_pkt))
 
@@ -153,7 +160,8 @@ class Squid_DP_Best_Effort(Squid_DP):
             self.phase += 1
             self.sta_complete_sample.append(0)
 
-        if self.pkt_counter_remain <= 0 and random.random() < self.sample_prob and self.sample_counter < self.sample_z:
+        # if self.pkt_counter_remain <= 0 and random.random() < self.sample_prob and self.sample_counter < self.sample_z:
+        if self.pkt_counter_remain <= 0 and self.sample_counter < self.sample_z:
             self.simulator.schedule(DATA_PLANE_OP, self.sample, flow_key, flow_val)
         
             self.sta_complete_sample[-1] += 1
@@ -214,12 +222,14 @@ def approximated_lrfu_strategy(old_val, new_val):
 
 def init_val(new_val):
     new_val += 1
-    c = 0.75
+    c = 0.95
+    # c = 0.999992
     return -math.log(c) * new_val
 
 def approximated_init_val(new_val):
     new_val += 1
-    c = 0.75
+    c = 0.95
+    # c = 0.999999 for S2
     return 2 * new_val
 
 class Squid_DP_Best_Effort_LRFU(Squid_DP):
@@ -237,12 +247,14 @@ class Squid_DP_Best_Effort_LRFU(Squid_DP):
     def insert_inbound(self, timestamp, flow_key, flow_val):
         self.sta_total_pkt += 1
         self.sta_counter += 1
+        
 
-        flow_val = self.init_val(flow_val)
+        flow_val = self.init_val(self.sta_counter) # self.init_val(flow_val) NOTE: init_val takes the score of the current packet (which is #id of the packet) as its input!
 
         index = self.hash(flow_key) % self.rows
 
         matched = 0
+        
 
         for i in range(self.columns):
             if self.array[i][index][0] == flow_key:
@@ -260,13 +272,16 @@ class Squid_DP_Best_Effort_LRFU(Squid_DP):
                     self.array[i][index][2] |= 1
 
         if self.pkt_counter_remain <= 0 and (self.phase % 2) == 0:
-            # pdb.set_trace()
+            
+            
             print("Sampling on phase {}. Counter: {}".format(self.phase + 1, self.sta_counter))
+            
             self.save_log()
             self.phase += 1
             self.sta_complete_sample.append(0)
 
-        if self.pkt_counter_remain <= 0 and random.random() < self.sample_prob and self.sample_counter < self.sample_z:
+        # if self.pkt_counter_remain <= 0 and random.random() < self.sample_prob and self.sample_counter < self.sample_z:
+        if self.pkt_counter_remain <= 0 and self.sample_counter < self.sample_z:
             self.simulator.schedule(DATA_PLANE_OP, self.sample, flow_key, flow_val)
         
             self.sta_complete_sample[-1] += 1
@@ -347,7 +362,8 @@ class Squid_DP_Hashing(Squid_DP):
             self.phase += 1
             self.sta_complete_sample.append(0)
 
-        if self.pkt_counter_remain <= 0 and random.random() < self.sample_prob and self.sample_counter < self.sample_z:
+        # if self.pkt_counter_remain <= 0 and random.random() < self.sample_prob and self.sample_counter < self.sample_z:
+        if self.pkt_counter_remain <= 0 and self.sample_counter < self.sample_z:
             self.simulator.schedule(DATA_PLANE_OP, self.sample, flow_key, flow_val)
         
             self.sta_complete_sample[-1] += 1

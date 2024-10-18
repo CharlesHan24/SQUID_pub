@@ -5,7 +5,7 @@ import math
 import pdb
 
 class Squid_CP_Las_Vagas(object):
-    def __init__(self, rows, columns, fullness, sample_z, emptyness, delta, log):
+    def __init__(self, rows, columns, fullness, sample_z, emptiness, delta, log):
         self.log = log
         self.rows = rows
         self.columns = columns
@@ -14,7 +14,7 @@ class Squid_CP_Las_Vagas(object):
         self.rcv_cnt = 0
 
         self.fullness = int(self.rows * self.columns * fullness) # how many items are there when we identify the arrays as "full"
-        self.emptyness = int(self.rows * self.columns * emptyness)
+        self.emptiness = int(self.rows * self.columns * emptiness)
         self.delta = int(self.rows * self.columns * delta)
 
         self.buffer = [[], []] # two empty buffers
@@ -36,12 +36,12 @@ class Squid_CP_Las_Vagas(object):
             self.buffer[0] = sorted(self.buffer[0], reverse=True)
             self.buffer[1] = sorted(self.buffer[1], reverse=True)
 
-            k1 = int(self.sample_z * (self.emptyness + self.delta / 2.5) / self.n)
+            k1 = int(self.sample_z * (self.emptiness + self.delta / 2.5) / self.n)
             if k1 >= len(self.buffer[0]): # should never happen
                 k1 = len(self.buffer[0]) - 1
             self.threshold1 = max(self.buffer[0][k1], self.old_threshold)
 
-            k2 = int(self.sample_z // 2 * (self.emptyness + self.delta / 2.5) / self.n)
+            k2 = int(self.sample_z // 2 * (self.emptiness + self.delta / 2.5) / self.n)
             if k2 >= len(self.buffer[1]): # should never happen
                 k2 = len(self.buffer[1]) - 1
             self.threshold2 = max(self.buffer[1][k2], self.old_threshold)
@@ -70,13 +70,13 @@ class Squid_CP_Las_Vagas(object):
 
             # pdb.set_trace()
             
-            if self.counter1 > self.emptyness + self.delta:
+            if self.counter1 > self.emptiness + self.delta:
                 self.log.write("Control plane: failed\n")
                 threshold, minus_cnt = self.slow_cp_op()
-            elif self.counter2 < self.emptyness:
+            elif self.counter2 < self.emptiness:
                 self.log.write("Control plane: failed\n")
                 threshold, minus_cnt = self.slow_cp_op()
-            elif self.counter1 >= self.emptyness:
+            elif self.counter1 >= self.emptiness:
                 self.log.write("Control plane: success\n")
                 threshold = self.threshold1 # always pickup the large
                 minus_cnt = self.fullness - self.counter1
@@ -103,11 +103,11 @@ class Squid_CP_Las_Vagas(object):
                     items.append(arrays[i][j][1] & 0xfffffffe)
         
         items = sorted(items, reversed=True)
-        return items[self.emptyness - 1], self.fullness - self.emptyness
+        return items[self.emptiness - 1], self.fullness - self.emptiness
     
 
 class Squid_CP_Monte_Carlo(object):
-    def __init__(self, rows, columns, fullness, sample_z, emptyness, delta, log):
+    def __init__(self, rows, columns, fullness, sample_z, emptiness, delta, log):
         self.log = log
         self.rows = rows
         self.columns = columns
@@ -116,7 +116,7 @@ class Squid_CP_Monte_Carlo(object):
         self.rcv_cnt = 0
 
         self.fullness = int(self.rows * self.columns * fullness) # how many items are there when we identify the arrays as "full"
-        self.emptyness = int(self.rows * self.columns * emptyness)
+        self.emptiness = int(self.rows * self.columns * emptiness)
         self.delta = int(self.rows * self.columns * delta)
 
         self.buffer = [] # two empty buffers
@@ -133,11 +133,11 @@ class Squid_CP_Monte_Carlo(object):
         if self.rcv_cnt == self.sample_z: # full
             self.buffer = sorted(self.buffer, reverse=True)
 
-            k = int(self.sample_z * (self.emptyness + self.delta / 2.5) / self.n)
+            k = int(self.sample_z * (self.emptiness + self.delta / 2.5) / self.n)
             if k >= len(self.buffer): # should never happen
                 k = len(self.buffer) - 1
             self.threshold = self.buffer[k]
 
-            self.simulator.schedule(DATA_PLANE_OP, self.dataplane.adjust, self.threshold, self.fullness - self.emptyness - self.delta // 2)
+            self.simulator.schedule(DATA_PLANE_OP, self.dataplane.adjust, self.threshold, self.fullness - self.emptiness - self.delta // 2)
             
             self.rcv_cnt = 0

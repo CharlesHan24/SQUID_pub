@@ -29,11 +29,15 @@ class Sim_Events(object):
 
 
 class Simulator(object):
-    def __init__(self, rows, columns, fullness, sample_z, emptyness, delta, hash: str, log, data_plane_mode: str, control_plane_mode: str, switch_config: Sw_Config, checkpoint_fout):
+    def __init__(self, rows, columns, fullness, sample_z, emptiness, delta, hash: str, log, data_plane_mode: str, control_plane_mode: str, switch_config: Sw_Config, checkpoint_fout):
         if hash == "crc32":
             self.hash = utils.crc32
+        elif hash == "bobhash":
+            
+            self.hash = utils.bobhash2
         else:
             self.hash = utils.identity_hash
+        
 
         if data_plane_mode == "best_effort":
             self.dataplane = squid_dp.Squid_DP_Best_Effort(rows, columns, fullness, sample_z, self.hash, log, checkpoint_fout)
@@ -48,9 +52,9 @@ class Simulator(object):
             exit(0)
 
         if control_plane_mode == "las_vagas":
-            self.controller = squid_cp.Squid_CP_Las_Vagas(rows, columns, fullness, sample_z, emptyness, delta, log)
+            self.controller = squid_cp.Squid_CP_Las_Vagas(rows, columns, fullness, sample_z, emptiness, delta, log)
         elif control_plane_mode == "monte_carlo":
-            self.controller = squid_cp.Squid_CP_Monte_Carlo(rows, columns, fullness, sample_z, emptyness, delta, log)
+            self.controller = squid_cp.Squid_CP_Monte_Carlo(rows, columns, fullness, sample_z, emptiness, delta, log)
         else:
             print("Error: control plane mode not understood")
             exit(0)
@@ -126,6 +130,7 @@ class Simulator(object):
 
         next_data = next(data)
         
+        # pdb.set_trace()
         while len(self.events_queue) > 0:
             item: Sim_Events = self.events_queue[0]
             if next_data[0] == const.INF_TIME and item.ts == const.INF_TIME: # simulation ends

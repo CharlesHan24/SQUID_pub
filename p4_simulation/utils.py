@@ -11,6 +11,10 @@ def identity_hash(key):
 def bobhash(key):
     return jenkins.hashlittle(key)
 
+def bobhash2(key):
+    
+    return jenkins.hashlittle(key.to_bytes(4, "little"))
+
 def check_bitmap_digit(bitmap, row, col, tot_rows, tot_cols):
     index = col * tot_rows + row
     return bitmap[index >> 6] & (1 << (index & 63))

@@ -1,0 +1,14 @@
+{
+    "rows": 16384,
+    "columns": 4,
+    "fullness": 0.7,
+    "emptiness": 0.3,
+    "delta": 0.05,
+    "time_interv": 100.0, // 100 ns
+    "sample_z": 1000,
+    "delay_recirc": 16, // 16ns
+    "bw_dp": 0.5,
+    "delay_cpdp": 10000, // 10000ns
+    "bw_cp": 1000,
+    "cp_outbound_rate": 1000, // 1000ns
+}

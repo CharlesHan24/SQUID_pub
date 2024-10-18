@@ -7,6 +7,7 @@ import utils
 import random
 import const
 import argparse
+import pdb
 
 def readin_caida(data_fin, amount):
     fin = open(data_fin, "rb")
@@ -28,6 +29,101 @@ def readin_caida(data_fin, amount):
             break
 
     return results
+
+
+# def readin_caida_generator(data_fin, amount):
+#     fin = open(data_fin, "rb")
+#     results = []
+#     delta_ts = 200
+#     timestamp = 0
+#     i = 0
+#     contents = fin.read(-1)
+
+#     idx = 0
+
+#     while True:
+#         i += 1
+#         if i >= amount:
+#             break
+#         try:
+#             if idx + 21 > len(contents):
+#                 break
+#             bts = contents[idx:idx + 21]
+#             idx += 21
+            
+#             bts = fin.read(21)
+#             five_tuple = bts[0:13]
+#             timestamp += delta_ts
+
+#             hashed_key = utils.bobhash(five_tuple) & 0xfffffffc
+#             gen_value = random.randint(1, 2**24) * 2
+#             yield [timestamp, hashed_key, gen_value]
+            
+#         except:
+#             break
+
+#     return results
+
+
+
+def readin_caida_generator(data_fin, amount):
+    fin = open(data_fin, "rb")
+    results = []
+    i = 0
+    cur_time = 0
+    delta_ts = 200
+    # amount = 4000000
+    while True:
+        i += 1
+        if i >= amount:
+            break
+        
+        try:
+            bts = fin.read(21)
+            if len(bts) < 21:
+                break
+            five_tuple = bts[0:13]
+            timestamp = cur_time + delta_ts
+            cur_time += delta_ts
+
+            hashed_key = utils.bobhash(five_tuple) & 0xfffffffc
+            gen_value = random.randint(1, 2**24) * 2
+            yield [timestamp, hashed_key, gen_value]
+        except:
+            break
+
+    yield [const.INF_TIME, 0, 0]
+
+def readin_cache_generator(data_fin, amount):
+    
+    fin = open(data_fin, "r")
+    results = []
+    i = 0
+    cur_time = 0
+    delta_ts = 2000
+    amount = 25000000
+    while True:
+        i += 1
+        if i >= amount:
+            break
+
+        if i % 1000000 == 0:
+            print(i)
+        
+        try:
+            starting_idx, _, _, _ = fin.readline().split()
+            starting_idx = int(starting_idx)
+            
+            
+            timestamp = cur_time + delta_ts
+            cur_time += delta_ts
+
+            gen_value = random.randint(1, 2**24) * 2
+            yield [timestamp, starting_idx, gen_value]
+        except:
+            break
+
+    yield [const.INF_TIME, 0, 0]
 
 
 def readin_zipf(data_fin, amount):
@@ -132,9 +228,12 @@ def readin_zipf_generator_batched(data_fin, amount):
 def readin_data(data_fin, data_type, amount):
     # TODO
     if data_type == "CAIDA":
-        return readin_caida(data_fin, amount)
+        return readin_caida_generator(data_fin, amount)
     elif data_type == "zipf":
         return readin_zipf_generator_batched(data_fin, amount)
+    elif data_type == "cache":
+        
+        return readin_cache_generator(data_fin, amount)
     else:
         return []
 
@@ -149,12 +248,12 @@ if __name__ == "__main__":
     config = json.load(config_fin)
 
     sim = simulator.Simulator(args.rows, args.cols, config["fullness"], \
-        config["sample_z"], config["emptyness"], config["delta"], \
-        "crc32", open(config["log_fname"] + "_{}_{}.txt".format(args.rows, args.cols), "a+"), config["data_plane_mode"], config["control_plane_mode"], \
+        config["sample_z"], config["emptiness"], config["delta"], \
+        "bobhash", open(config["log_fname"] + "_{}_{}.txt".format(args.rows, args.cols), "a+"), config["data_plane_mode"], config["control_plane_mode"], \
         simulator.Sw_Config(config["delay_recirc"], config["delay_backend"], config["bw_dp"], config["delay_cpdp"], config["bw_cp"], config["cp_outbound_rate"]), "checkpoint/" + config["log_fname"] + "_{}_{}.dat".format(args.rows, args.cols))
 
     print("Readin data...")
-    data = readin_data("data/{}".format(config["dataset"]), "zipf", config["data_amount"])
+    data = readin_data("data/{}".format(config["dataset"]), config["data_type"], config["data_amount"])
     print("Finish reading the data")
     sim.run_generator(data)
 

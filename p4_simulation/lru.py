@@ -2,22 +2,6 @@ from collections import OrderedDict
 import const
 import pdb
 import sortedcontainers
-import math
-
-def lrfu_strategy(old_val, new_val):
-    dif = old_val - new_val
-    if dif > 200:
-        return old_val
-    elif dif < -200:
-        return new_val
-    else:
-        return new_val + math.log(math.exp(dif) + 1)
-
-def init_val(timestamp):
-    timestamp += 1
-    # c = 0.9999995 for S2
-    c = 0.95
-    return -math.log(c) * timestamp
 
 class LRFU(object):
     def __init__(self, cached_cnt, data_gen, log):
@@ -44,18 +28,16 @@ class LRFU(object):
                 except:
                     pdb.set_trace()
                 self.timestamp += 1
-                new_val = init_val(self.timestamp)
-                val = lrfu_strategy(val, new_val)
+                val = self.timestamp
                 self.cached_value[val] = key
                 self.cached_item[key] = val
                 hit += 1
             
             else:
                 self.timestamp += 1
-                new_val = init_val(self.timestamp)
                 if len(self.cached_item) < self.cached_cnt:
-                    self.cached_item[key] = new_val
-                    self.cached_value[new_val] = key
+                    self.cached_item[key] = self.timestamp
+                    self.cached_value[self.timestamp] = key
                 else:
                     val = self.cached_value.peekitem(0)
                     del_key, val = val[1], val[0]
@@ -63,10 +45,10 @@ class LRFU(object):
                     self.cached_value.pop(val)
                     self.cached_item.pop(del_key)
 
-                    self.cached_item[key] = new_val
-                    self.cached_value[new_val] = key
+                    self.cached_item[key] = self.timestamp
+                    self.cached_value[self.timestamp] = key
             
-            if i % 900000 == 0:
+            if i % 1000000 == 0:
                 print(i)
                 self.log.write("{}/{}\n".format(hit, i))
                 self.log.flush()

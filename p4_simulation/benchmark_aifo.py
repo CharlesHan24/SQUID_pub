@@ -6,7 +6,7 @@ import random
 import const
 import argparse
 import pdb
-import lru
+import d_ray_dp_sampling
 
 def readin_caida(data_fin, amount):
     fin = open(data_fin, "rb")
@@ -60,7 +60,7 @@ def readin_caida_generator(data_fin, amount):
     return results
 
 def readin_cache_generator(data_fin, amount):
-    # pdb.set_trace()
+    
     fin = open(data_fin, "r")
     results = []
     i = 0
@@ -178,10 +178,9 @@ if __name__ == "__main__":
     n = args.rows * args.cols
 
     data = readin_data("data/{}".format(config["dataset"]), config["data_type"], config["data_amount"])
-    
-    if "is_lrfu" in config and config["is_lrfu"] == 0:
-        lrfu_engine = lru.LRFU(n, data, open(config["log_fname"] + "lru" + "_{}_{}.txt".format(args.rows, args.cols), "w"))
-    else:
-        lrfu_engine = lrfu.LRFU(n, data, open(config["log_fname"] + "_{}_{}.txt".format(args.rows, args.cols), "w"))
+
+    # pdb.set_trace()
+    engine = d_ray_dp_sampling.D_ray_dp_sampling(args.rows, args.cols, data, open(config["log_fname"] + "aifo" + "_{}_{}.txt".format(args.rows, args.cols), "w"), data_name="S2" if "S2" in config["dataset"] else None, nsamples=16)
+
     print("Finish reading the data")
-    lrfu_engine.run()
+    engine.run()
